@@ -1,0 +1,42 @@
+---
+title: "REU_R_2018_workshop_2"
+author: "Ilya"
+date: "6/20/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#####set working directory
+```{r}
+setwd("~/ilya documents/R/REU/workshops 2018/workshop_2/REU_R_2018_workshop_2")
+```
+
+#####read in PanTHERIA data (source: http://esapubs.org/archive/ecol/e090/184/#data)
+#####and inspect first few and last few lines 
+```{r}
+#read in; row.names must be NULL or otherwise get error related to duplicate row names
+P <- read.table("PanTHERIA_1-0_WR05_Aug2008.txt", header=TRUE, row.names=NULL)
+#view first few lines
+head(P)
+#view last few lines
+tail(P)
+```
+
+#####get the dimensions of dataset
+```{r}
+dim(P)
+```
+
+#####print list of column names of dataset
+```{r}
+names(P)
+```
+
+#####get a summary of your data
+```{r}
+summary(P)
+```
+
