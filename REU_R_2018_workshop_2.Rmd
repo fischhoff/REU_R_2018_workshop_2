@@ -4,6 +4,15 @@ author: "Ilya"
 date: "6/20/2018"
 output: github_document
 ---
+#####packages
+```{r}
+#add dependencies = TRUE to make sure R installs packages needed by this package
+#install package
+install.packages("ggplot2", dependencies = TRUE)
+#load package so you can use it here
+library(ggplot2)
+```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -15,10 +24,14 @@ setwd("~/ilya documents/R/REU/workshops 2018/workshop_2/REU_R_2018_workshop_2")
 ```
 
 #####read in PanTHERIA data (source: http://esapubs.org/archive/ecol/e090/184/#data)
+#####open in excel and save as csv
 #####and inspect first few and last few lines 
 ```{r}
 #read in; row.names must be NULL or otherwise get error related to duplicate row names
-P <- read.table("PanTHERIA_1-0_WR05_Aug2008.txt", header=TRUE, row.names=NULL)
+P <- read.csv("PanTHERIA_1-0_WR05_Aug2008.csv", header=TRUE)
+#note: reading in as .txt resulted in Genus and species getting split up
+#P <- read.table("PanTHERIA_1-0_WR05_Aug2008.txt", header=TRUE, row.names=6)
+
 #view first few lines
 head(P)
 #view last few lines
@@ -39,4 +52,185 @@ names(P)
 ```{r}
 summary(P)
 ```
+
+####summarize single column
+```{r}
+# use the $ operator to access a single column
+summary(P$X5.1_AdultBodyMass_g)
+#notice there are -999 values; need to change to NA
+```
+
+#####change -999 to NA in single column using function "which"
+```{r}
+#see what == does
+TRUE==TRUE
+1==2
+#see what != does
+TRUE!=FALSE
+1!=1
+#find -999 rows
+row_indices = which(P$X5.1_AdultBodyMass_g==-999)
+#change values to NA
+P$X5.1_AdultBodyMass_g[row_indices]=NA
+#get summary again
+summary(P$X5.1_AdultBodyMass_g)
+```
+
+#####change -999 to NA in all columns using function replace
+```{r}
+#check that there are -999 in various cols
+summary(P)
+P = replace(P, P==-999, NA)
+#check that now there are NAs, no longer -999 as min
+summary(P)
+```
+
+
+
+#####get more summary stats on single column
+#####add argument na.rm =TRUE to get summary of non-NAs 
+```{r}
+# run various summary stats column length
+length(P$X5.1_AdultBodyMass_g)
+# minimum value in column
+min(P$X5.1_AdultBodyMass_g, na.rm=TRUE)
+# maximum value in column
+max(P$X5.1_AdultBodyMass_g, na.rm=TRUE)
+# range of values in column, min-max
+range(P$X5.1_AdultBodyMass_g, na.rm=TRUE)
+# mean of column, removes NAs
+mean(P$X5.1_AdultBodyMass_g, na.rm=TRUE)
+# standard deviation of column
+sd(P$X5.1_AdultBodyMass_g, na.rm=TRUE)
+```
+
+#####Indexing to get only rows and columns meeting criteria
+```{r}
+#mydataset[row(s) that meet this criteria, columns that meet this criteria]
+P_index<-P[P$MSW05_Family=="Canidae",c(1:8)]
+#inspect/summarize
+head(P_index)
+```
+
+#####Indexing second example -- find out dog and cat species (no data about them)
+```{r}
+#mydataset[row(s) that meet this criteria, columns that meet this criteria]
+P_index<-P[P$MSW05_Family %in% c("Canidae","Felidae"), c(1:6)]
+#inspect/summarize: check that both dogs and cats are there using function unique
+unique(P_index$MSW05_Family)
+```
+#####Subsetting -- get only dog records, first eight columns
+```{r}
+#subset(mydataset,row(s) that meet this criteria, select=c(column names or numbers))
+P_subset<-subset(P,MSW05_Family=="Canidae",select=c(1:8))
+#inspect and summarize
+head(P_subset)
+```
+
+#more indexing and subsetting examples
+```{r}
+#get data for nocturnal carnivores, including all columns
+P_carn_noct_index = P[P$X1.1_ActivityCycle==1 & P$MSW05_Order=="Carnivora",]
+#OR
+P_carn_noct_subset = subset(P,X1.1_ActivityCycle==1 & MSW05_Order=="Carnivora")
+#get data with AdultBodyMass_g greater than median, first 8 columns
+median(P$X5.1_AdultBodyMass_g)
+#indexing
+P_himass_index = P[P$X5.1_AdultBodyMass_g> median(P$X5.1_AdultBodyMass_g),c(1:8)]
+#subsetting
+P_himass_subset = subset(P,X5.1_AdultBodyMass_g> median(P$X5.1_AdultBodyMass_g),select=c(1:8))
+#check this is about half the data
+dim(P_himass_subset)
+#check both methods get same result
+dim(P_himass_index)==dim(P_himass_subset)
+```
+
+####Data visualization
+#####Histogram in base R
+```{r}
+hist(P$X15.1_LitterSize)
+```
+
+#####Histogram in ggplot2
+```{r}
+ggplot(data = P, mapping = aes(x = P$X15.1_LitterSize)) + 
+  geom_histogram()
+```
+
+######Boxplot in base R
+```{r}
+boxplot(P$X15.1_LitterSize)
+```
+
+######Boxplot in ggplot2
+```{r}
+#set x = "" because there's just one variable
+ggplot(data = P, mapping = aes(x="", y = X15.1_LitterSize))+
+  geom_boxplot()
+```
+
+######Boxplot in ggplot2 for multiple variables
+```{r}
+#set x = Order
+ggplot(data = P, mapping = aes(x=MSW05_Order, y = X15.1_LitterSize))+
+  geom_boxplot()
+```
+
+######Boxplot in ggplot2 for multiple variables w/ legible axis labels
+```{r}
+#google search for : "vertical x axis labels ggplot2"
+#set x = Order
+ggplot(data = P, mapping = aes(x=MSW05_Order, y = X15.1_LitterSize))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+#####Subset the data for Primates and Rodentia 
+```{r}
+Primates = subset(P, MSW05_Order == "Primates")
+Rodentia = subset(P, MSW05_Order == "Rodentia")
+#or
+Primates = P[P$MSW05_Order== "Primates",]
+Rodentia = P[P$MSW05_Order== "Rodentia",]
+```
+
+#####Report the number of species within Primates and Rodentia
+```{r}
+#use function dim, which returns two numbers -- rows and columns 
+dim(Primates)
+dim(Rodentia)
+```
+
+#####Report the mean and standard deviation of weaning age for Primates and Rodentia
+```{r}
+#primates
+mean(Primates$X25.1_WeaningAge_d, na.rm=TRUE)
+sd(Primates$X25.1_WeaningAge_d, na.rm=TRUE)
+#rodents
+mean(Rodentia$X25.1_WeaningAge_d, na.rm=TRUE)
+sd(Rodentia$X25.1_WeaningAge_d, na.rm=TRUE)
+```
+
+#####Create a histogram and boxplot of social group size (X10.2_SocialGrpSize) for Primates
+```{r}
+#create plot with 1 row, 2 columns of subplots
+par(mfrow=c(1,2))
+hist(Primates$X25.1_WeaningAge_d)
+boxplot(Primates$X25.1_WeaningAge_d)
+```
+
+#####Which Order, Primates or Rodentia, has more outliers for InterBirthInterval_d? Do outliers tend to have shorter or longer interbirth intervals? 
+```{r}
+#Primate outliers; use sort function to put them in order
+primate_outliers <- boxplot.stats(Primates$X14.1_InterbirthInterval_d)$out
+sort(primate_outliers)
+#compare to average
+summary(Primates$X14.1_InterbirthInterval_d)
+#rodent outliers
+rodent_outliers<-  boxplot.stats(Rodentia$X14.1_InterbirthInterval_d)$out
+sort(rodent_outliers)
+#compare to average
+summary(Rodentia$X14.1_InterbirthInterval_d)
+```
+
 
