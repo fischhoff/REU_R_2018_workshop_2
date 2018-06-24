@@ -5,36 +5,35 @@ date: "6/20/2018"
 output: github_document
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 #####packages
 ```{r}
-#add dependencies = TRUE to make sure R installs packages needed by this package
-#install package
-install.packages("ggplot2", dependencies = TRUE)
-install.packages("dplyr", dependencies = TRUE)
+#specify the repository (repos) to avoid error about mirror not being set
+#also add logical so packages are only installed if they are missing 
+#https://stackoverflow.com/questions/33969024/install-packages-fails-in-knitr-document-trying-to-use-cran-without-setting-a
+if(!require(ggplot2)) install.packages("ggplot2",repos = "http://cran.us.r-project.org")
+if(!require(dplyr)) install.packages("dplyr",repos = "http://cran.us.r-project.org")
+if(!require(data.table)) install.packages("data.table",repos = "http://cran.us.r-project.org")
 #load package so you can use it here
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
+library(data.table)
 ```
 
 
-#####set working directory
+#####set working directory -- note you'll need to change the working directory to your own computer 
 ```{r}
 setwd("~/ilya documents/R/REU/workshops 2018/workshop_2/REU_R_2018_workshop_2")
 ```
 
-#####read in PanTHERIA data (source: http://esapubs.org/archive/ecol/e090/184/#data)
-#####open in excel and save as csv
-#####and inspect first few and last few lines 
+#####read in PanTHERIA data (source: http://esapubs.org/archive/ecol/e090/184/#data) and inspect first few and last few lines 
 ```{r}
-#read in; row.names must be NULL or otherwise get error related to duplicate row names
+#open txt file in excel, save as csv 
 P <- read.csv("PanTHERIA_1-0_WR05_Aug2008.csv", header=TRUE)
-#note: reading in as .txt resulted in Genus and species getting split up
-#P <- read.table("PanTHERIA_1-0_WR05_Aug2008.txt", header=TRUE, row.names=6)
 
 #view first few lines
 head(P)
@@ -42,7 +41,15 @@ head(P)
 tail(P)
 ```
 
-#####get the dimensions of dataset
+#####alternative way of reading in data: this is a more reliable method than opening .txt file in excel and saving as csv (as above with read.csv), because some .txt files will be too big to open in excel. however, remembered about this method after powerpoint was done, and this method results in variables having slightly different names vs. method above, which would be confusing, so not using for this workshop.   
+```{r}
+#use fread from package data.table
+P_alternate <- fread("PanTHERIA_1-0_WR05_Aug2008.txt")
+
+```
+
+
+#####get the dimensions of dataset-- should be 5416 row*55 col
 ```{r}
 dim(P)
 ```
@@ -131,7 +138,7 @@ P_subset<-subset(P,MSW05_Family=="Canidae",select=c(1:8))
 head(P_subset)
 ```
 
-#more indexing and subsetting examples
+#####more indexing and subsetting examples
 ```{r}
 #get data for nocturnal carnivores, including all columns
 P_carn_noct_index = P[P$X1.1_ActivityCycle==1 & P$MSW05_Order=="Carnivora",]
